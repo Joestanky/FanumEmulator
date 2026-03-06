@@ -6,6 +6,7 @@ from main import INSSTR
 lines = code.split('\n')
 print(lines)
 
+outputcode = True
 
 def toHex(byte):
 	hexes = ['0', '1', '2', '3',
@@ -18,14 +19,21 @@ def toHex(byte):
 
 ByteDump = []
 
+Markers = {
+}
 
 addressingMode = ''
 
 #Programs Lines
+print("decoding line...")
 for line in lines:
 	sections = line.split(' ')
 	opcode = sections[0]
 	#Non Implied Instructions
+	if ":" in line:
+		print("Marker at ", hex(len(ByteDump)))
+		Markers[line[:-1]] = len(ByteDump)
+		print(": ", Markers[line[:-1]])
 	if len(sections) == 2:
 		fullOperand = sections[1]
 
@@ -75,18 +83,32 @@ for line in lines:
 
 
 #Header
-Header = [0x4E,0x45,0x53,0x1A] #"NES", then MS-DOS EOF (dunno why EOF there)
-ByteDump.insert(0, Header[0])
-ByteDump.insert(1, Header[1])
-ByteDump.insert(2, Header[2])
-ByteDump.insert(3, Header[3])
+
+PRGSize = int(len(ByteDump)/(16*1024))+1
+print("PRG Size: ", PRGSize)
+
+CHRSize = 1 #i havent implemented this quite yet
+
+Flags6 = 0b00000001
+Flags7 = 0b00000000
+Flags8 = 0b00000000
+Flags9 = 0b00000000
+Flags10 = 0b00000000
+
+Header = [	0x4E,0x45,0x53,0x1A,	 #"NES", then MS-DOS EOF (dunno why EOF there)
+			PRGSize,CHRSize,Flags6, Flags7,
+			Flags8,Flags9,Flags10, 0x00,
+			0x00,0x00,0x00,0x00]		
+
+for i in range(len(Header)):
+	ByteDump.insert(i, Header[i])
 
 
 
 
-ByteDump.append()
+#ByteDump.append()
 
-RawDump = bytearray(len(ByteDump))
+RawDump = bytearray(PRGSize*16384+CHRSize*8192+16)
 
 ByteDumpHex = []
 
@@ -97,8 +119,12 @@ for x,byte in enumerate(ByteDump):
 print("Byte Dump ---")
 print(ByteDumpHex)
 
-print(RawDump)
-out.write(RawDump)
+
+if outputcode: 
+	#print(RawDump)
+	print("Dumped")
+	out.write(RawDump)
+
 print("---")
 
 
