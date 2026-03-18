@@ -2,11 +2,15 @@ file = open("code.txt", 'r')
 out = open("code.nes", 'wb')
 code = file.read()
 
-from main import INSSTR
+from inst import INSSTR
 lines = code.split('\n')
 print(lines)
 
 outputcode = True
+debugend = True
+
+reset = 0x0000
+interrupt = 0x0000
 
 def toHex(byte):
 	hexes = ['0', '1', '2', '3',
@@ -17,12 +21,27 @@ def toHex(byte):
 	nib2 = hexes.index(byte[1])
 	return (nib1<<4)+nib2
 
+def littleEndian(word):
+	leftByte = None
+	rightByte = None
+	if isinstance(word,str):
+		word = word.replace("$", "")
+		word = word.replace("#", "")
+		leftByte = word[2:4]
+		rightByte = word[:2]
+	elif isinstance(word, int):
+		leftByte = word>>8
+		rightByte = word &0xF
+	return [leftByte,rightByte]
+
+
 ByteDump = []
 
 Markers = {
 }
 
 addressingMode = ''
+fullOperand = ''
 
 #Programs Lines
 print("decoding line...")
@@ -30,44 +49,54 @@ for line in lines:
 	sections = line.split(' ')
 	opcode = sections[0]
 	#Non Implied Instructions
-	if ":" in line:
+	if ":" in line: 			#marker thingity
 		print("Marker at ", hex(len(ByteDump)))
 		Markers[line[:-1]] = len(ByteDump)
-		print(": ", Markers[line[:-1]])
-	if len(sections) == 2:
-		fullOperand = sections[1]
+		print(opcode, ": ", Markers[line[:-1]])
+	else:
+		if len(sections) == 1: 	#Instruction with no opcode
+			addressingMode = 'IP'
+		elif len(sections) == 2: 	#Instruction with opcode
+			fullOperand = sections[1]
 
-		addressingMode = '~~'
+			addressingMode = '~~'
 
-		#Addressing Modes
-		if 		'd' == 'f':
-			pass
-		elif 	"#" in fullOperand:
-			addressingMode = 'IM'
-		elif '(' in fullOperand:
-			if 		'X' in fullOperand: addressingMode = 'IX' 	#Indirect X
-			elif 	'Y' in fullOperand: addressingMode = 'IY' 	#Indirect Y
-		elif 	len(fullOperand) >3:
-			addressingMode = 'A'
-			if 		'X' in fullOperand: addressingMode += 'X' 	#Absolute X
-			elif 	'Y' in fullOperand: addressingMode += 'Y' 	#Absolute Y
-			else: 	addressingMode += 'B' 						#Absolute
-		else:
-			addressingMode = 'Z'
-			if 		'X' in fullOperand: addressingMode += 'X' 	#Zero Page X
-			else:	addressingMode += 'P' 						#Zero Page
+			#Addressing Modes
+			if 		'd' == 'f':
+				pass
+			elif 	"#" in fullOperand:
+				addressingMode = 'IM'
+			elif '(' in fullOperand:
+				if 		'X' in fullOperand: addressingMode = 'IX' 	#Indirect X
+				elif 	'Y' in fullOperand: addressingMode = 'IY' 	#Indirect Y
+			elif 	len(fullOperand) >5:
+				addressingMode = 'A'
+				if 		'X' in fullOperand: addressingMode += 'X' 	#Absolute X
+				elif 	'Y' in fullOperand: addressingMode += 'Y' 	#Absolute Y
+				else: 	addressingMode += 'B' 						#Absolute
+			else:
+				addressingMode = 'Z'
+				sections[1] = sections[1].replace(',','')
+				sections[1] = sections[1].replace('Y','')
+				sections[1] = sections[1].replace('X','')
+				if 		'X' in fullOperand: addressingMode += 'X' 	#Zero Page X
+				elif 	'Y' in fullOperand: addressingMode += 'Y'   #Zero Page Y
+				else:	addressingMode += 'P' 						#Zero Page
 
 		opcodeByte = INSSTR.index(opcode+addressingMode)
 		print(opcode+addressingMode, hex(opcodeByte), '|', fullOperand)
 
 		#Operand
 		operandBytes = []
+		if len(sections) > 1:
+			if sections[1] in Markers.keys():
+				operandBytes.append(Markers[sections[1]])
 		if addressingMode in ['AB','AX','AY']: 
 			first = sections[1][3:5]
 			second = sections[1][1:3]
 			operandBytes.append(toHex(first))
 			operandBytes.append(toHex(second))
-		elif addressingMode in ['ZP','ZX','IM']:
+		elif addressingMode in ['ZP','ZX', 'ZY','IM']:
 			operandBytes.append(toHex(sections[1][-2:]))
 		elif addressingMode in ['IX','IY']:
 			operandBytes.append(toHex(sections[1][2:4]))
@@ -103,10 +132,8 @@ Header = [	0x4E,0x45,0x53,0x1A,	 #"NES", then MS-DOS EOF (dunno why EOF there)
 for i in range(len(Header)):
 	ByteDump.insert(i, Header[i])
 
-
-
-
-#ByteDump.append()
+if debugend:
+	ByteDump.append(0x02)
 
 RawDump = bytearray(PRGSize*16384+CHRSize*8192+16)
 
@@ -118,14 +145,13 @@ for x,byte in enumerate(ByteDump):
 
 print("Byte Dump ---")
 print(ByteDumpHex)
-
+print("---")
 
 if outputcode: 
 	#print(RawDump)
 	print("Dumped")
 	out.write(RawDump)
 
-print("---")
 
 
 out.close()

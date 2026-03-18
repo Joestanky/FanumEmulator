@@ -1,8 +1,0 @@
-LDA #$36
-STA $06
-LDA #$1C
-STA $07
-BER:
-LDA #$80
-STA ($06),Y
-LDA $1C36,Y
