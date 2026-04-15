@@ -97,7 +97,7 @@ def LoadROM():
 	else:
 		for i in range(16*1024):
 			glob.Mem[0x8000+i] = Program[i]
-	print(hex(glob.Mem[0x8000]))
+	#print(hex(glob.Mem[0x8000]))
 
 
 
@@ -115,11 +115,11 @@ ADR = ''
 
 
 
-flags = 'CZIDB1VN'
+#flags = 'CZIDB1VN'
 
 glob.A = 0x00
-glob.X = 0x01
-glob.Y = 0x02
+glob.X = 0x00
+glob.Y = 0x00
 
 #Basic Byte Manipulation
 def ByteCheck(byte):
@@ -138,6 +138,23 @@ def WordCheck(word):
 
 def Add(b):
 	return ByteCheck(glob.ALU+b)
+
+def AddSign(b):
+	sign = b&0x80 >> 7
+	if sign == 1:
+		newb = 256-b
+		return ByteCheck(glob.ALU-newb)
+	else:
+		return ByteCheck(glob.ALU+b)
+#100000000
+# 11111011
+#000000101
+# 00000000
+#         
+
+
+def Sub(b):
+	return ByteCheck(glob.ALU-b)
 #--
 def IncPC():
 	glob.PC = WordCheck(glob.PC+1)
@@ -145,15 +162,35 @@ def IncPC():
 def DecPC():
 	glob.PC = WordCheck(glob.PC-1)
 
-def PAB(): #Pc to AddressBus
+def PAB(): #PC to Address Bus
 	glob.AB = glob.PC
 	return(glob.AB)
+
+def ABP(): #Address Bus to PC
+	glob.PC = glob.AB
+	return(glob.PC)
 
 def AHL(): #ADH and ADL combined to AB
 	glob.AB = (glob.ADH<<8)+glob.ADL
 	return glob.AB
 
+def HLA(): #Address Bus to ADH and ADL
+	glob.ADH = glob.AB>>8
+	glob.ADL = glob.AB&0xFF
+
+
 #Printing/Debugging
+
+MemoryWatch = [0x2000]
+
+def LHex(array):
+	newy = "|"
+	for i in array:
+		newy += hex(i)[2:].upper()
+		newy += "|"
+	return newy
+
+
 def PCheck():
 	print('---: Processor Status:')
 	print('NV1BDIZC')
@@ -170,13 +207,28 @@ def RCheck():
 
 def FullCheck():
 	PCheck()
-	RCheck()	
+	RCheck()
+	print('---: ZP First 64:')
+	print(LHex(glob.Mem[:64]))
+	print('---: Memory Watch:')
+	for i in MemoryWatch:
+		print(f'{i:04x}'.upper(), ": ", f'{glob.Mem[i]:02x}'.upper())
 
 #Cyclic Behaivors
 def Addressing():
 	if glob.Cyc == 1 and ADR != 'IP':
 		IncPC()
 		PAB()
+
+	if INSSTR[IR][:3] in ["INC", "DEC"]: 
+		if (ADR == 'AB') and (glob.Cyc == 5):
+			IncPC()
+			PAB()
+		elif (ADR == 'AX') and (glob.Cyc == 6):
+			IncPC()
+			PAB()
+		return
+
 	if (ADR == 'AB') and (glob.Cyc == 3): IncPC(); PAB()
 	if (ADR == 'AX' or ADR == 'AY') and (glob.Cyc == 4): IncPC(); PAB()
 
@@ -187,10 +239,12 @@ def Cycle():
 	global FE, IR, ITR, CycleNum, FLW, ADR
 	print("----------------")
 	print("Cycle: ", CycleNum)
+
 	if FE == 0:				#If fetching
 		FE = 1 				#Now Executing
 		glob.DB = glob.Mem[PAB()]		#Push opcode to Data Bus
 		print("_Fetched: ", hex(glob.DB))
+		HLA()
 		IncPC()				#Increment PC (apparently done right after retrieving byte)
 		CycleNum += 1
 
@@ -221,7 +275,9 @@ def Cycle():
 				ITR = 0
 				glob.DB = glob.Mem[PAB()] #Set data bus to next opcode
 				print("Fetched: ", '0x'+f'{glob.DB:02x}'.upper())
-				if glob.DB == 0x02:
+				print(hex(glob.PC), "PC")			
+				HLA()
+				if glob.DB == 0x02 or CycleNum >= 64:
 					FullCheck()
 					exit()
 				if FLW: 		#If we are flowing normally
@@ -229,7 +285,6 @@ def Cycle():
 						IncPC()
 					else:
 						IncPC() 	#Set PC for next operand grab
-					print(hex(glob.PC), "PC")
 				else: 			#If i.e. our ins uses no operands
 					FLW = True
 					DecPC() 	#Go back one byte
@@ -247,8 +302,6 @@ def Cycle():
 
 if __name__ == "__main__":
 	print("------------==--------------")
-	nigger()
-	print(glob.A, "my nigga bro")
 	LoadROM()
 	while RUNCPU:
 		Cycle()

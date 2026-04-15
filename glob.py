@@ -10,9 +10,10 @@ def init():
 	ADH = 0x00	#High-order byte used to set address bus
 	DB = 0x00 	#:( i think this will be required for doing things and stuff
 	ALU = 0x00  #idek but i think it is neededdd
-	P = 0x00 	#Processor status flag byte
+	P = 0x20 	#Processor status flag byte {NV1BDIZC}
 	Cyc = 0 	#the current amount of cycles left for an instruction (set every fetch)
-	global flags, Mem
+	global flags, Mem, np
 	#Processor Status
 	flags = 'CZIDB1VN'
 	Mem = []
+	np = 0

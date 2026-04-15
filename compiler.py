@@ -2,6 +2,8 @@ file = open("code.txt", 'r')
 out = open("code.nes", 'wb')
 code = file.read()
 
+from sys import exit
+
 from inst import INSSTR
 lines = code.split('\n')
 print(lines)
@@ -34,81 +36,137 @@ def littleEndian(word):
 		rightByte = word &0xF
 	return [leftByte,rightByte]
 
+def valueLE(bytepair):
+	return toHex(bytepair[1])<<8+toHex(bytepair[0])
+
+def toSigned(byte):
+	if byte > 0xFF:
+		byte = 0x100-byte
+	return byte &0xFF
+
+"""
+one=0x80FF-0x8134
+if one < 0:
+	one = 0x100-one
+
+
+
+print(hex(toSigned(one)))
+exit()
+"""
 
 ByteDump = []
 
 Markers = {
 }
 
+
 addressingMode = ''
 fullOperand = ''
 
+program = False
+
 #Programs Lines
-print("decoding line...")
+print("decoding lines...")
 for line in lines:
-	sections = line.split(' ')
-	opcode = sections[0]
-	#Non Implied Instructions
-	if ":" in line: 			#marker thingity
-		print("Marker at ", hex(len(ByteDump)))
-		Markers[line[:-1]] = len(ByteDump)
-		print(opcode, ": ", Markers[line[:-1]])
+	if not program:
+		if line == ".program":
+			program = True
+		else:
+			sections = line.split(' ')
+			if sections[0] in 'define':
+				print("Label: ")
+				Markers[sections[1]] = valueLE(littleEndian(sections[2]))
+				print(sections[1], ": ", hex(Markers[sections[1]]))
+
+
 	else:
-		if len(sections) == 1: 	#Instruction with no opcode
-			addressingMode = 'IP'
-		elif len(sections) == 2: 	#Instruction with opcode
-			fullOperand = sections[1]
+		sections = line.split(' ')
+		opcode = sections[0]
+		#Non Implied Instructions
+		if ":" in line: 			#marker thingity
+			print("Marker at ", hex(len(ByteDump)))
+			Markers[line[:-1]] = len(ByteDump)
+			print(opcode, ": ", Markers[line[:-1]])
+		else:
+			if len(sections) == 1: 	#Instruction with no opcode
+				addressingMode = 'IP'
+			elif len(sections) == 2: 	#Instruction with opcode
+				fullOperand = sections[1]
+				hexes = fullOperand.replace('#','')
+				hexes = hexes.replace('$','')
+				hexes = hexes.replace('Y','')
+				hexes = hexes.replace('X','')
+				hexes = hexes.replace(',','')
 
-			addressingMode = '~~'
+				addressingMode = '~~'
 
-			#Addressing Modes
-			if 		'd' == 'f':
-				pass
-			elif 	"#" in fullOperand:
-				addressingMode = 'IM'
-			elif '(' in fullOperand:
-				if 		'X' in fullOperand: addressingMode = 'IX' 	#Indirect X
-				elif 	'Y' in fullOperand: addressingMode = 'IY' 	#Indirect Y
-			elif 	len(fullOperand) >5:
-				addressingMode = 'A'
-				if 		'X' in fullOperand: addressingMode += 'X' 	#Absolute X
-				elif 	'Y' in fullOperand: addressingMode += 'Y' 	#Absolute Y
-				else: 	addressingMode += 'B' 						#Absolute
-			else:
-				addressingMode = 'Z'
-				sections[1] = sections[1].replace(',','')
-				sections[1] = sections[1].replace('Y','')
-				sections[1] = sections[1].replace('X','')
-				if 		'X' in fullOperand: addressingMode += 'X' 	#Zero Page X
-				elif 	'Y' in fullOperand: addressingMode += 'Y'   #Zero Page Y
-				else:	addressingMode += 'P' 						#Zero Page
+				#Addressing Modes
+				if 		'd' == 'f':
+					pass
+				elif 	"#" in fullOperand:
+					addressingMode = 'IM'
+				elif '(' in fullOperand:
+					if 		'X' in fullOperand: addressingMode = 'IX' 	#Indirect X
+					elif 	'Y' in fullOperand: addressingMode = 'IY' 	#Indirect Y
 
-		opcodeByte = INSSTR.index(opcode+addressingMode)
-		print(opcode+addressingMode, hex(opcodeByte), '|', fullOperand)
+				elif sections[0] in ('BNE', 'BEQ', 'BCC', 'BCS', 'BPL', 'BMI', 'BVC', 'BVS'):
+					addressingMode = 'RL'
 
-		#Operand
-		operandBytes = []
-		if len(sections) > 1:
-			if sections[1] in Markers.keys():
-				operandBytes.append(Markers[sections[1]])
-		if addressingMode in ['AB','AX','AY']: 
-			first = sections[1][3:5]
-			second = sections[1][1:3]
-			operandBytes.append(toHex(first))
-			operandBytes.append(toHex(second))
-		elif addressingMode in ['ZP','ZX', 'ZY','IM']:
-			operandBytes.append(toHex(sections[1][-2:]))
-		elif addressingMode in ['IX','IY']:
-			operandBytes.append(toHex(sections[1][2:4]))
-		opBytes = ''	
-		for i in operandBytes:
-			opBytes += hex(i) +' '
-		print(opBytes)
+				elif 	len(hexes) >2:
+					#print(hexes, "look here josef blizzard")
+					addressingMode = 'A'
+					if 		'X' in fullOperand: addressingMode += 'X' 	#Absolute X
+					elif 	'Y' in fullOperand: addressingMode += 'Y' 	#Absolute Y
+					else: 	addressingMode += 'B' 						#Absolute
+				else:
+					addressingMode = 'Z'
+					sections[1] = sections[1].replace(',','')
+					sections[1] = sections[1].replace('Y','')
+					sections[1] = sections[1].replace('X','')
+					if 		'X' in fullOperand: addressingMode += 'X' 	#Zero Page X
+					elif 	'Y' in fullOperand: addressingMode += 'Y'   #Zero Page Y
+					else:	addressingMode += 'P' 						#Zero Page
 
-		#Dumping
-		ByteDump.append(opcodeByte)
-		for byte in operandBytes:
-			ByteDump.append(byte)
+			opcodeByte = INSSTR.index(opcode+addressingMode)
+			print(opcode+addressingMode, hex(opcodeByte), '|', fullOperand)
+
+			#Operand
+			operandBytes = []
+			if len(sections) > 1:
+				if sections[1] in Markers.keys():
+					if opcode in ['BNE', 'BEQ', 'BCC', 'BCS', 'BPL', 'BMI', 'BVC', 'BVS']:
+						one = len(ByteDump)+2
+						two = Markers[sections[1]]
+						hre = two - one
+						if hre < 0:
+							hre = 0x100 - hre
+						hre = toSigned(hre)
+						print(hex(hre),one, two, hre, "josef kemal blizzard lookey heres")
+						operandBytes.append(hre)
+					else:
+						first = Markers[sections[1]]&0xFF
+						second = Markers[sections[1]]>>8
+						operandBytes.append(first)
+						operandBytes.append(second)
+				elif addressingMode in ['AB','AX','AY']: 
+					first = sections[1][3:5]
+					second = sections[1][1:3]
+					operandBytes.append(toHex(first))
+					operandBytes.append(toHex(second))
+				elif addressingMode in ['ZP','ZX','ZY','IM','RL']:
+					operandBytes.append(toHex(sections[1][-2:]))
+				elif addressingMode in ['IX','IY']:
+					operandBytes.append(toHex(sections[1][2:4]))
+			opBytes = ''	
+			for i in operandBytes:
+				opBytes += hex(i) +' '
+			print(opBytes)
+
+			#Dumping
+			ByteDump.append(opcodeByte)
+			for byte in operandBytes:
+				ByteDump.append(byte)
 
 
 #Header
@@ -143,9 +201,13 @@ for x,byte in enumerate(ByteDump):
 	ByteDumpHex.append(hex(byte))
 	RawDump[x] = byte
 
+
 print("Byte Dump ---")
 print(ByteDumpHex)
 print("---")
+
+RawDump[0x400C] = 0x00
+RawDump[0x400D] = 0x80
 
 if outputcode: 
 	#print(RawDump)
