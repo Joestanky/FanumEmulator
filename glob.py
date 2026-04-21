@@ -12,8 +12,9 @@ def init():
 	ALU = 0x00  #idek but i think it is neededdd
 	P = 0x20 	#Processor status flag byte {NV1BDIZC}
 	Cyc = 0 	#the current amount of cycles left for an instruction (set every fetch)
-	global flags, Mem, np
+	global flags, Mem, np, vv
 	#Processor Status
 	flags = 'CZIDB1VN'
 	Mem = []
 	np = 0
+	vv = 0

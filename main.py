@@ -146,6 +146,9 @@ def AddSign(b):
 		return ByteCheck(glob.ALU-newb)
 	else:
 		return ByteCheck(glob.ALU+b)
+
+def SubSign(b):
+	return ByteCheck(b-glob.ALU)
 #100000000
 # 11111011
 #000000101

@@ -1,11 +1,4 @@
 define PpuControl_2000 $2000
 .program
-LDA #$02
-STA $1004
-LDA #$10
-LDX #$03
-STA $06
-STX $05
-LDA #$36
-LDY #$01
-ADC ($05),Y
+LDA #$04
+SBC #$0A
