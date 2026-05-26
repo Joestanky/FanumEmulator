@@ -5,7 +5,9 @@ code = file.read()
 from sys import exit
 
 from inst import INSSTR
-lines = code.split('\n')
+
+#print(code.upper().split('\n'))
+lines = code.upper().split('\n')
 print(lines)
 
 outputcode = True
@@ -70,11 +72,11 @@ program = False
 print("decoding lines...")
 for line in lines:
 	if not program:
-		if line == ".program":
+		if line == ".PROGRAM":
 			program = True
 		else:
 			sections = line.split(' ')
-			if sections[0] in 'define':
+			if sections[0] in 'DEFINE':
 				print("Label: ")
 				Markers[sections[1]] = valueLE(littleEndian(sections[2]))
 				print(sections[1], ": ", hex(Markers[sections[1]]))
