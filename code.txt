@@ -1,6 +1,6 @@
 define PpuControl_2000 $2000
 .program
-lda #$f0
-sta $0101
-lda #$0f
-bit $0101
+lda #$04
+tay
+sta $1006
+cmy $1006

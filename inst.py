@@ -1303,11 +1303,11 @@ def EORend():
 def EOR():
 	glob.A = ByteCheck(glob.A^glob.DB)
 
-def EORIM(): #And with Carry Immediate, 2Cyc, $49 *CR*
+def EORIM(): #Exclusive OR Immediate, 2Cyc, $49 *CR*
 	if glob.Cyc == 1:
 		EOR()
 
-def EORZP(): #And with Carry Zero Page, 3Cyc, $45 *CR*
+def EORZP(): #Exclusive OR Zero Page, 3Cyc, $45 *CR*
 	if glob.Cyc == 2:
 		glob.ADL = glob.DB
 		glob.ADH = 0x00
@@ -1315,7 +1315,7 @@ def EORZP(): #And with Carry Zero Page, 3Cyc, $45 *CR*
 	elif glob.Cyc == 1:
 		EOR()
 
-def EORZX(): #And with Carry Zero + X, 4Cyc, $55 *CR*
+def EORZX(): #Exclusive OR Zero + X, 4Cyc, $55 *CR*
 	if glob.Cyc == 3:
 		glob.ALU = glob.DB
 		glob.ADH = 0x00
@@ -1325,7 +1325,7 @@ def EORZX(): #And with Carry Zero + X, 4Cyc, $55 *CR*
 	elif glob.Cyc == 1:
 		EOR()
 
-def EORAB(): #And with Carry Absolute, 4Cyc, $4D *CR*
+def EORAB(): #Exclusive OR, 4Cyc, $4D *CR*
 	if glob.Cyc == 3:
 		glob.ADL = glob.DB
 	elif glob.Cyc == 2:
@@ -1352,7 +1352,7 @@ def EORAX(): #And with Carry Absolute+X, 4+1Cyc, $5D *CR*
 	elif glob.Cyc == 1:
 		EOR()
 
-def EORAY(): #And with Carry Absolute+Y, 4+1Cyc, $59 *CR*
+def EORAY(): #Exclusive OR Absolute+Y, 4+1Cyc, $59 *CR*
 	if glob.Cyc == 4:
 		glob.ALU = glob.DB
 	elif glob.Cyc == 3:
@@ -1370,7 +1370,7 @@ def EORAY(): #And with Carry Absolute+Y, 4+1Cyc, $59 *CR*
 	elif glob.Cyc == 1:
 		EOR()
 
-def EORIX(): #And with Carry indexed indirect, 6Cycs, $41 *CR*
+def EORIX(): #Exclusive OR indexed indirect, 6Cycs, $41 *CR*
 	if glob.Cyc == 5:
 		glob.ADL = glob.DB
 		glob.ADH = 0x00
@@ -1387,7 +1387,7 @@ def EORIX(): #And with Carry indexed indirect, 6Cycs, $41 *CR*
 	elif glob.Cyc == 1:
 		EOR()
 
-def EORIY(): #And with Carry indirect indexed, 5+1Cycs, $51 *CR*
+def EORIY(): #Exclusive OR indirect indexed, 5+1Cycs, $51 *CR*
 	if glob.Cyc == 5:
 		glob.ADL = glob.DB
 		glob.ADH = 0x00
@@ -1425,11 +1425,11 @@ def ORAend():
 def ORA():
 	glob.A = ByteCheck(glob.A|glob.DB)
 
-def ORAIM(): #And with Carry Immediate, 2Cyc, $09 *CR*
+def ORAIM(): #Or Immediate, 2Cyc, $09 *CR*
 	if glob.Cyc == 1:
 		ORA()
 
-def ORAZP(): #And with Carry Zero Page, 3Cyc, $05 *CR*
+def ORAZP(): #Or Zero Page, 3Cyc, $05 *CR*
 	if glob.Cyc == 2:
 		glob.ADL = glob.DB
 		glob.ADH = 0x00
@@ -1437,7 +1437,7 @@ def ORAZP(): #And with Carry Zero Page, 3Cyc, $05 *CR*
 	elif glob.Cyc == 1:
 		ORA()
 
-def ORAZX(): #And with Carry Zero + X, 4Cyc, $15 *CR*
+def ORAZX(): #Or Carry Zero + X, 4Cyc, $15 *CR*
 	if glob.Cyc == 3:
 		glob.ALU = glob.DB
 		glob.ADH = 0x00
@@ -1447,7 +1447,7 @@ def ORAZX(): #And with Carry Zero + X, 4Cyc, $15 *CR*
 	elif glob.Cyc == 1:
 		ORA()
 
-def ORAAB(): #And with Carry Absolute, 4Cyc, $0D *CR*
+def ORAAB(): #Or Carry Absolute, 4Cyc, $0D *CR*
 	if glob.Cyc == 3:
 		glob.ADL = glob.DB
 	elif glob.Cyc == 2:
@@ -1456,7 +1456,7 @@ def ORAAB(): #And with Carry Absolute, 4Cyc, $0D *CR*
 	elif glob.Cyc == 1:
 		ORA()
 
-def ORAAX(): #And with Carry Absolute+X, 4+1Cyc, $1D *CR*
+def ORAAX(): #Or Carry Absolute+X, 4+1Cyc, $1D *CR*
 	if glob.Cyc == 4:
 		glob.ALU = glob.DB
 	elif glob.Cyc == 3:
@@ -1474,7 +1474,7 @@ def ORAAX(): #And with Carry Absolute+X, 4+1Cyc, $1D *CR*
 	elif glob.Cyc == 1:
 		ORA()
 
-def ORAAY(): #And with Carry Absolute+Y, 4+1Cyc, $19 *CR*
+def ORAAY(): #Or Absolute+Y, 4+1Cyc, $19 *CR*
 	if glob.Cyc == 4:
 		glob.ALU = glob.DB
 	elif glob.Cyc == 3:
@@ -1492,7 +1492,7 @@ def ORAAY(): #And with Carry Absolute+Y, 4+1Cyc, $19 *CR*
 	elif glob.Cyc == 1:
 		ORA()
 
-def ORAIX(): #And with Carry indexed indirect, 6Cycs, $01 *CR*
+def ORAIX(): #Or indexed indirect, 6Cycs, $01 *CR*
 	if glob.Cyc == 5:
 		glob.ADL = glob.DB
 		glob.ADH = 0x00
@@ -1509,7 +1509,7 @@ def ORAIX(): #And with Carry indexed indirect, 6Cycs, $01 *CR*
 	elif glob.Cyc == 1:
 		ORA()
 
-def ORAIY(): #And with Carry indirect indexed, 5+1Cycs, $11 *CR*
+def ORAIY(): #Or indirect indexed, 5+1Cycs, $11 *CR*
 	if glob.Cyc == 5:
 		glob.ADL = glob.DB
 		glob.ADH = 0x00
@@ -1557,7 +1557,7 @@ def BITZP(): #Bit Test Zero Page, 3Cyc, $24 *CR*
 		AHL()
 	elif glob.Cyc == 1:
 		BIT()
-def BITAB(): #Bit Test Absolute, 4Cyc, $2C **
+def BITAB(): #Bit Test Absolute, 4Cyc, $2C *CR*
 	if glob.Cyc == 3:
 		glob.ADL = glob.DB
 	elif glob.Cyc == 2:
@@ -1565,6 +1565,252 @@ def BITAB(): #Bit Test Absolute, 4Cyc, $2C **
 		AHL()
 	elif glob.Cyc == 1:
 		BIT()
+
+
+
+#-------------------
+#Compare------------
+#-------------------
+def CMP(): 
+	if glob.A >= glob.DB: SEF("C")
+	else: CLF("C")
+
+	if glob.A == glob.DB: SEF("Z")
+	else: CLF("Z")
+
+	if glob.A >= 0x80: SEF("N")
+	else: CLF("N")
+
+def CMPIM(): #Compare Immediate, 2Cyc, $C9 *CR*
+	if glob.Cyc == 1:
+		CMP()
+
+def CMPZP(): #Compare Zero Page, 3Cyc, $C5 *CR*
+	if glob.Cyc == 2:
+		glob.ADL = glob.DB
+		glob.ADH = 0x00
+		AHL()
+	elif glob.Cyc == 1:
+		CMP()
+
+def CMPZX(): #Compare Zero + X, 4Cyc, $D5 *CR*
+	if glob.Cyc == 3:
+		glob.ALU = glob.DB
+		glob.ADH = 0x00
+	elif glob.Cyc == 2:
+		glob.ADL = Add(glob.X)
+		AHL()
+	elif glob.Cyc == 1:
+		CMP()
+
+def CMPAB(): #Compare Absolute, 4Cyc, $CD *CR*
+	if glob.Cyc == 3:
+		glob.ADL = glob.DB
+	elif glob.Cyc == 2:
+		glob.ADH = glob.DB
+		AHL()
+	elif glob.Cyc == 1:
+		CMP()
+
+def CMPAX(): #Compare Absolute+X, 4+1Cyc, $DD *CR*
+	if glob.Cyc == 4:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 3:
+		glob.ADH = glob.DB
+		if glob.ALU+glob.X>0xFF: 
+			glob.ADL = Add(glob.X)
+			glob.ALU = glob.ADH
+		else:
+			glob.ADL = Add(glob.X)
+			glob.Cyc -= 1
+		AHL()
+	elif glob.Cyc == 2:
+		glob.ADH = Add(1)
+		AHL()
+	elif glob.Cyc == 1:
+		CMP()
+
+def CMPAY(): #Compare Absolute+Y, 4+1Cyc, $D9 *CR*
+	if glob.Cyc == 4:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 3:
+		glob.ADH = glob.DB
+		if glob.ALU+glob.Y>0xFF: 
+			glob.ADL = Add(glob.Y)
+			glob.ALU = glob.ADH
+		else:
+			glob.ADL = Add(glob.Y)
+			glob.Cyc -= 1
+		AHL()
+	elif glob.Cyc == 2:
+		glob.ADH = Add(1)
+		AHL()
+	elif glob.Cyc == 1:
+		CMP()
+
+def CMPIX(): #Compare indexed indirect, 6Cycs, $C1 **
+	if glob.Cyc == 5:
+		glob.ADL = glob.DB
+		glob.ADH = 0x00
+		glob.ALU = glob.ADL
+	elif glob.Cyc == 4:
+		glob.ADL = Add(glob.X)
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ADL = glob.DB
+		glob.AB+=1
+	elif glob.Cyc == 2:
+		glob.ADH = glob.DB
+		AHL()
+	elif glob.Cyc == 1:
+		CMP()
+
+def CMPIY(): #Compare indirect indexed, 5+1Cycs, $D1 **
+	if glob.Cyc == 5:
+		glob.ADL = glob.DB
+		glob.ADH = 0x00
+		AHL()
+	elif glob.Cyc == 4:
+		glob.ADL = glob.DB
+		glob.ALU = glob.ADL
+		glob.AB+=1
+	elif glob.Cyc == 3:
+		glob.ADH = glob.DB
+		if (glob.ADL+glob.Y)<=0xFF: glob.ADL=Add(glob.Y); glob.Cyc -=1
+		else: glob.ADL = Add(glob.Y); glob.ALU = glob.ADH 
+		AHL()
+	elif glob.Cyc == 2:
+		glob.ADH = Add(1)
+		AHL()
+	elif glob.Cyc == 1:
+		CMP()
+
+
+#-------------------
+#Compare X----------
+#-------------------
+
+
+def CMX(): 
+	if glob.X >= glob.DB: SEF("C")
+	else: CLF("C")
+
+	if glob.X == glob.DB: SEF("Z")
+	else: CLF("Z")
+
+	if glob.X >= 0x80: SEF("N")
+	else: CLF("N")
+
+def CMXIM(): #Compare X Immediate, 2Cyc, $E0 *CR*
+	if glob.Cyc == 1:
+		CMX()
+
+def CMXZP(): #Compare X Zero Page, 3Cyc, $E4 *CR*
+	if glob.Cyc == 2:
+		glob.ADL = glob.DB
+		glob.ADH = 0x00
+		AHL()
+	elif glob.Cyc == 1:
+		CMX()
+
+def CMXAB(): #Compare X Absolute, 4Cyc, $EC *CR*
+	if glob.Cyc == 3:
+		glob.ADL = glob.DB
+	elif glob.Cyc == 2:
+		glob.ADH = glob.DB
+		AHL()
+	elif glob.Cyc == 1:
+		CMX()
+
+
+#-------------------
+#Compare X----------
+#-------------------
+
+
+def CMY(): 
+	if glob.Y >= glob.DB: SEF("C")
+	else: CLF("C")
+
+	if glob.Y == glob.DB: SEF("Z")
+	else: CLF("Z")
+
+	if glob.Y >= 0x80: SEF("N")
+	else: CLF("N")
+
+def CMYIM(): #Compare Y Immediate, 2Cyc, $C0 *CR*
+	if glob.Cyc == 1:
+		CMY()
+
+def CMYZP(): #Compare Y Zero Page, 3Cyc, $C4 *CR*
+	if glob.Cyc == 2:
+		glob.ADL = glob.DB
+		glob.ADH = 0x00
+		AHL()
+	elif glob.Cyc == 1:
+		CMY()
+
+def CMYAB(): #Compare Y Absolute, 4Cyc, $CC *CR*
+	if glob.Cyc == 3:
+		glob.ADL = glob.DB
+	elif glob.Cyc == 2:
+		glob.ADH = glob.DB
+		AHL()
+	elif glob.Cyc == 1:
+		CMY()
+
+
+#-------------------
+#Transfers----------
+#-------------------
+
+def TAXIP(): #Transfer Accumulator to X, 2Cyc, $AA **
+	if glob.Cyc == 1:
+		glob.X = glob.A
+		if glob.X == 0:
+			SEF("Z")
+		else:
+			CLF("Z")
+		if glob.X >=128:
+			SEF("N")
+		else:
+			CLF("N")
+
+def TAYIP(): #Transfer Accumulator to Y, 2Cyc, $A8 **
+	if glob.Cyc == 1:
+		glob.Y = glob.A
+		if glob.Y == 0:
+			SEF("Z")
+		else:
+			CLF("Z")
+		if glob.Y >=128:
+			SEF("N")
+		else:
+			CLF("N")
+
+def TXAIP(): #Transfer Accumulator to X, 2Cyc, $8A **
+	if glob.Cyc == 1:
+		glob.A = glob.X
+		if glob.A == 0:
+			SEF("Z")
+		else:
+			CLF("Z")
+		if glob.A >=128:
+			SEF("N")
+		else:
+			CLF("N")
+
+def TYAIP(): #Transfer Accumulator to Y, 2Cyc, $98 **
+	if glob.Cyc == 1:
+		glob.A = glob.Y
+		if glob.A == 0:
+			SEF("Z")
+		else:
+			CLF("Z")
+		if glob.A >=128:
+			SEF("N")
+		else:
+			CLF("N")
 
 
 INSCOD = [0x0,ORAIX,0x2,0x3,0x4,ORAZP,0x6,0x7,0x8,ORAIM,0xA,0xB,0xC,ORAAB,0xE,0xF, #0x0
@@ -1575,13 +1821,13 @@ INSCOD = [0x0,ORAIX,0x2,0x3,0x4,ORAZP,0x6,0x7,0x8,ORAIM,0xA,0xB,0xC,ORAAB,0xE,0x
 			BVCRL,EORIY,0x2,0x3,0x4,EORZX,0x6,0x7,CLIIP,EORAY,0xA,0xB,0xC,EORAX,0xE,0xF,
 			0x0,ADCIX,0x2,0x3,0x4,ADCZP,0x6,0x7,0x8,ADCIM,0xA,0xB,0xC,ADCAB,0xE,0xF, #0x6
 			BVSRL,ADCIY,0x2,0x3,0x4,ADCZX,0x6,0x7,SEIIP,ADCAY,0xA,0xB,0xC,ADCAX,0xE,0xF,
-			0x0,STAIX,0x2,0x3,STYZP,STAZP,STXZP,0x7,DEYIP,0x9,0xA,0xB,STYAB,STAAB,STXAB,0xF, #0x8
-			BCCRL,STAIY,0x2,0x3,STYZX,STAZX,STXZY,0x7,0x8,STAAY,0xA,0xB,0xC,STAAX,0xE,0xF,
-			LDYIM,LDAIX,LDXIM,0x3,LDYZP,LDAZP,LDXZP,0x7,0x8,LDAIM,0xA,0xB,LDYAB,LDAAB,LDXAB,0xF, #0xA
+			0x0,STAIX,0x2,0x3,STYZP,STAZP,STXZP,0x7,DEYIP,0x9,TXAIP,0xB,STYAB,STAAB,STXAB,0xF, #0x8
+			BCCRL,STAIY,0x2,0x3,STYZX,STAZX,STXZY,0x7,TYAIP,STAAY,0xA,0xB,0xC,STAAX,0xE,0xF,
+			LDYIM,LDAIX,LDXIM,0x3,LDYZP,LDAZP,LDXZP,0x7,TAYIP,LDAIM,TAXIP,0xB,LDYAB,LDAAB,LDXAB,0xF, #0xA
 			BCSRL,LDAIY,0x2,0x3,LDYZX,LDAZX,LDXZY,0x7,CLVIP,LDAAY,0xA,0xB,LDYAX,LDAAX,LDXAY,0xF,
-			0x0,0x1,0x2,0x3,0x4,0x5,DECZP,0x7,INYIP,0x9,DEXIP,0xB,0xC,0xD,DECAB,0xF, #0xC
-			BNERL,0x1,0x2,0x3,0x4,0x5,DECZX,0x7,CLDIP,0x9,0xA,0xB,0xC,0xD,DECAX,0xF,
-			0x0,SBCIX,0x2,0x3,0x4,SBCZP,INCZP,0x7,INXIP,SBCIM,NOPIP,0xB,0xC,SBCAB,INCAB,0xF, #0xE
+			CMYIM,CMPIX,0x2,0x3,CMYZP,CMPZP,DECZP,0x7,INYIP,CMPIM,DEXIP,0xB,CMYAB,CMPAB,DECAB,0xF, #0xC
+			BNERL,CMPIY,0x2,0x3,0x4,CMPZX,DECZX,0x7,CLDIP,CMPAY,0xA,0xB,0xC,CMPAX,DECAX,0xF,
+			CMXIM,SBCIX,0x2,0x3,CMXZP,SBCZP,INCZP,0x7,INXIP,SBCIM,NOPIP,0xB,CMXAB,SBCAB,INCAB,0xF, #0xE
 			BEQRL,SBCIY,0x2,0x3,0x4,SBCZX,INCZX,0x7,SEDIP,SBCAY,0xA,0xB,0xC,SBCAX,INCAX,0xF,]
 
 INSCYC = [0x0,6,0x2,0x3,0x4,3,0x6,0x7,0x8,2,0xA,0xB,0xC,4,0xE,0xF, #0x0
@@ -1592,13 +1838,13 @@ INSCYC = [0x0,6,0x2,0x3,0x4,3,0x6,0x7,0x8,2,0xA,0xB,0xC,4,0xE,0xF, #0x0
 			4,6,0x2,0x3,0x4,4,0x6,0x7,2,5,0xA,0xB,0xC,5,0xE,0xF,
 			0x0,6,0x2,0x3,0x4,3,0x6,0x7,0x8,2,0xA,0xB,0xC,4,0xE,0xF, #0x6
 			4,6,0x2,0x3,0x4,4,0x6,0x7,2,5,0xA,0xB,0xC,5,0xE,0xF,
-			0x0,6,0x2,0x3,3,3,3,0x7,2,0x9,0xA,0xB,4,4,4,0xF, #0x8
-			4,6,0x2,0x3,4,4,4,0x7,0x8,5,0xA,0xB,0xC,5,0xE,0xF,
-			2,6,2,0x3,3,3,3,0x7,0x8,2,0xA,0xB,4,4,4,0xF, #0xA
+			0x0,6,0x2,0x3,3,3,3,0x7,2,0x9,2,0xB,4,4,4,0xF, #0x8
+			4,6,0x2,0x3,4,4,4,0x7,2,5,0xA,0xB,0xC,5,0xE,0xF,
+			2,6,2,0x3,3,3,3,0x7,2,2,2,0xB,4,4,4,0xF, #0xA
 			4,6,0x2,0x3,4,4,4,0x7,2,5,0xA,0xB,5,5,5,0xF,
-			0x0,0x1,0x2,0x3,0x4,0x5,5,0x7,2,0x9,2,0xB,0xC,0xD,6,0xF, #0xC
-			4,0x1,0x2,0x3,0x4,0x5,6,0x7,2,0x9,0xA,0xB,0xC,0xD,7,0xF,
-			0x0,6,0x2,0x3,0x4,3,5,0x7,2,2,2,0xB,0xC,4,6,0xF, #0xE
+			2,6,0x2,0x3,3,3,5,0x7,2,2,2,0xB,4,4,6,0xF, #0xC
+			4,6,0x2,0x3,0x4,4,6,0x7,2,5,0xA,0xB,0xC,5,7,0xF,
+			2,6,0x2,0x3,3,3,5,0x7,2,2,2,0xB,4,4,6,0xF, #0xE
 			4,6,0x2,0x3,0x4,4,6,0x7,2,5,0xA,0xB,0xC,5,7,0xF,]
 
 INSSTR = [0x0,"ORAIX",0x2,0x3,0x4,"ORAZP",0x6,0x7,0x8,"ORAIM",0xA,0xB,0xC,"ORAAB",0xE,0xF, #0x0
@@ -1609,11 +1855,11 @@ INSSTR = [0x0,"ORAIX",0x2,0x3,0x4,"ORAZP",0x6,0x7,0x8,"ORAIM",0xA,0xB,0xC,"ORAAB
 			"BVCRL","EORIY",0x2,0x3,0x4,"EORZX",0x6,0x7,"CLIIP","EORAY",0xA,0xB,0xC,"EORAX",0xE,0xF,
 			0x0,"ADCIX",0x2,0x3,0x4,"ADCZP",0x6,0x7,0x8,"ADCIM",0xA,0xB,0xC,"ADCAB",0xE,0xF, #0x6
 			"BVSRL","ADCIY",0x2,0x3,0x4,"ADCZX",0x6,0x7,"SEIIP","ADCAY",0xA,0xB,0xC,"ADCAX",0xE,0xF,
-			0x0,"STAIX",0x2,0x3,"STYZP","STAZP","STXZP",0x7,"DEYIP",0x9,0xA,0xB,"STYAB","STAAB","STXAB",0xF, #0x8
-			"BCCRL","STAIY",0x2,0x3,"STYZX","STAZX","STXZY",0x7,0x8,"STAAY",0xA,0xB,0xC,"STAAX",0xE,0xF,
-			"LDYIM","LDAIX","LDXIM",0x3,"LDYZP","LDAZP","LDXZP",0x7,0x8,"LDAIM",0xA,0xB,"LDYAB","LDAAB","LDXAB",0xF, #0xA
+			0x0,"STAIX",0x2,0x3,"STYZP","STAZP","STXZP",0x7,"DEYIP",0x9,"TXAIP",0xB,"STYAB","STAAB","STXAB",0xF, #0x8
+			"BCCRL","STAIY",0x2,0x3,"STYZX","STAZX","STXZY",0x7,"TYAIP","STAAY",0xA,0xB,0xC,"STAAX",0xE,0xF,
+			"LDYIM","LDAIX","LDXIM",0x3,"LDYZP","LDAZP","LDXZP",0x7,"TAYIP","LDAIM","TAXIP",0xB,"LDYAB","LDAAB","LDXAB",0xF, #0xA
 			"BCSRL","LDAIY",0x2,0x3,"LDYZX","LDAZX","LDXZY",0x7,"CLVIP","LDAAY",0xA,0xB,"LDYAX","LDAAX","LDXAY",0xF,
-			0x0,0x1,0x2,0x3,0x4,0x5,"DECZP",0x7,"INYIP",0x9,"DEXIP",0xB,0xC,0xD,"DECAB",0xF, #0xC
-			"BNERL",0x1,0x2,0x3,0x4,0x5,"DECZX",0x7,"CLDIP",0x9,0xA,0xB,0xC,0xD,"DECAX",0xF,
-			0x0,"SBCIX",0x2,0x3,0x4,"SBCZP","INCZP",0x7,"INXIP","SBCIM","NOPIP",0xB,0xC,"SBCAB","INCAB",0xF, #0xE
+			"CMYIM","CMPIX",0x2,0x3,"CMYZP","CMPZP","DECZP",0x7,"INYIP","CMPIM","DEXIP",0xB,"CMYAB","CMPAB","DECAB",0xF, #0xC
+			"BNERL","CMPIY",0x2,0x3,0x4,"CMPZX","DECZX",0x7,"CLDIP","CMPAY",0xA,0xB,0xC,"CMPAX","DECAX",0xF,
+			"CMXIM","SBCIX",0x2,0x3,"CMXZP","SBCZP","INCZP",0x7,"INXIP","SBCIM","NOPIP",0xB,"CMXAB","SBCAB","INCAB",0xF, #0xE
 			"BEQRL","SBCIY",0x2,0x3,0x4,"SBCZX","INCZX",0x7,"SEDIP","SBCAY",0xA,0xB,0xC,"SBCAX","INCAX",0xF,]

@@ -189,6 +189,8 @@ MemoryWatch = [0x2000]
 def LHex(array):
 	newy = "|"
 	for i in array:
+		if len(hex(i)[2:]) == 1:
+			newy += '0'
 		newy += hex(i)[2:].upper()
 		newy += "|"
 	return newy

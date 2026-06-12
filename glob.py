@@ -1,5 +1,5 @@
 def init():
-	global A,X,Y,PC,IR,AB,ADL,ADH,DB,ALU,P,Cyc
+	global A,X,Y,PC,IR,AB,ADL,ADH,DB,ALU,P,Cyc, X
 	A = 0x00	#this is the accumulator you like add and subtract and shit to it and save it to places
 	X = 0x00	#this is the index register so yes
 	Y = 0x00 	#this is the second index register inde"x" then y get it?
@@ -12,6 +12,7 @@ def init():
 	ALU = 0x00  #idek but i think it is neededdd
 	P = 0x20 	#Processor status flag byte {NV1BDIZC}
 	Cyc = 0 	#the current amount of cycles left for an instruction (set every fetch)
+	S = 0x00 	#Value of stack pointer 
 	global flags, Mem, np, vv
 	#Processor Status
 	flags = 'CZIDB1VN'
