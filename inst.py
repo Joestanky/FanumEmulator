@@ -76,20 +76,16 @@ def LDAAX(): #Load to a absolutely + X, 4+Cycs, $BD *RC*
 	if glob.Cyc == 4:
 		glob.ADL = glob.DB
 		glob.ALU = glob.ADL
-		print(hex(ADL), "1")
 	elif glob.Cyc == 3:
 		glob.ADH = glob.DB
-		print(hex(glob.ADH), "2")
 		if (glob.ADL+glob.X)<=0xFF: glob.Cyc -= 1; glob.ADL = Add(glob.X) #not overflowing so just add x and skip next
 		else: glob.ADL = Add(X); glob.ALU = glob.ADH #overflowing so add with byte correction and push ADH to ALU
 		AHL()
 	elif glob.Cyc == 2:
 		glob.ADH = Add(1) #overflowed so add 1
-		print(hex(glob.ADH), "3")
 		AHL()
 	elif glob.Cyc == 1:
 		glob.A = glob.DB
-		print(hex(glob.A), "4")
 		LDAend()
 
 def LDAAY(): #Load to a abslutely+Y, 4+Cycs, $B9 *RC*
@@ -160,14 +156,14 @@ def STAZP(): #Store from A to zp address, 3Cycs, $85 *RC*
 
 def STAZX(): #Store from A to zp address+X, 4Cycs, $95 *RC*
 	if glob.Cyc == 3:
-		glob.ADL = DB
-		glob.ALU = ADL
+		glob.ADL = glob.DB
+		glob.ALU = glob.ADL
 		glob.ADH = 0x00
 	elif glob.Cyc == 2:
 		glob.ADL = Add(glob.X)
 		AHL()
 	elif glob.Cyc == 1:
-		glob.Mem[AB] = glob.A
+		glob.Mem[glob.AB] = glob.A
 
 def STAAB(): #Store from A to absolute address, 4Cycs, $8D *RC*
 	if glob.Cyc == 3:
@@ -238,10 +234,6 @@ def STAIY(): #Store from A to address+Y at zp, 6Cycs, $91 *RC*
 	elif glob.Cyc == 1:
 		glob.Mem[glob.AB] = glob.A
 
-
-def NOPIP():
-	if glob.Cyc == 1:
-		pass
 
 #-------------------
 #Load X------------
@@ -698,6 +690,9 @@ def DEYIP(): #Decrement Y, 2Cyc, $88 *RC*
 #Branches---------
 #-------------------
 
+#when doing any sort of change in position of pc, tell it to go to the byte right before
+#where you want it to as the addressing code will increment the pc on the cycle that fetches the next opcode.
+
 def BRANCH(): #general branch for like them all ok!
 	HLA() 								# push AB to ADL and ADH
 
@@ -722,7 +717,7 @@ def BRANCH(): #general branch for like them all ok!
 
 def BNERL(): #Branch if Not Equal, 2+1+1Cyc, $D0 *RC*
 	if glob.Cyc == 3:
-		print(glob.P&0x02, "look here my friend yes")
+		#print(glob.P&0x02, "look here my friend yes")
 		if (glob.P & 0x02) == 0x02: 		# if zero flag set
 			glob.Cyc -= 2 					# skip next 2 cycles
 		else:
@@ -1055,7 +1050,6 @@ def SBC():
 
 	glob.A = Add(glob.A)#-1+glob.P&1 this breaks everything?
 	glob.A = ByteCheck(glob.A-1+(glob.P&1))
-	print(glob.A)
 	SBCend()
 
 
@@ -1165,7 +1159,7 @@ def SBCIY(): #Sub with Carry indirect indexed, 5+1Cycs, $F1 *CR*
 
 
 #-------------------
-#Logican And--------
+#Logical And--------
 #-------------------
 
 def ANDend():
@@ -1724,7 +1718,7 @@ def CMXAB(): #Compare X Absolute, 4Cyc, $EC *CR*
 
 
 #-------------------
-#Compare X----------
+#Compare Y----------
 #-------------------
 
 
@@ -1764,7 +1758,7 @@ def CMYAB(): #Compare Y Absolute, 4Cyc, $CC *CR*
 #Transfers----------
 #-------------------
 
-def TAXIP(): #Transfer Accumulator to X, 2Cyc, $AA **
+def TAXIP(): #Transfer Accumulator to X, 2Cyc, $AA *CR*
 	if glob.Cyc == 1:
 		glob.X = glob.A
 		if glob.X == 0:
@@ -1776,7 +1770,7 @@ def TAXIP(): #Transfer Accumulator to X, 2Cyc, $AA **
 		else:
 			CLF("N")
 
-def TAYIP(): #Transfer Accumulator to Y, 2Cyc, $A8 **
+def TAYIP(): #Transfer Accumulator to Y, 2Cyc, $A8 *CR*
 	if glob.Cyc == 1:
 		glob.Y = glob.A
 		if glob.Y == 0:
@@ -1788,7 +1782,7 @@ def TAYIP(): #Transfer Accumulator to Y, 2Cyc, $A8 **
 		else:
 			CLF("N")
 
-def TXAIP(): #Transfer Accumulator to X, 2Cyc, $8A **
+def TXAIP(): #Transfer X to Accumulator, 2Cyc, $8A *CR*
 	if glob.Cyc == 1:
 		glob.A = glob.X
 		if glob.A == 0:
@@ -1800,7 +1794,7 @@ def TXAIP(): #Transfer Accumulator to X, 2Cyc, $8A **
 		else:
 			CLF("N")
 
-def TYAIP(): #Transfer Accumulator to Y, 2Cyc, $98 **
+def TYAIP(): #Transfer Y to Accumulator, 2Cyc, $98 *CR*
 	if glob.Cyc == 1:
 		glob.A = glob.Y
 		if glob.A == 0:
@@ -1813,53 +1807,592 @@ def TYAIP(): #Transfer Accumulator to Y, 2Cyc, $98 **
 			CLF("N")
 
 
-INSCOD = [0x0,ORAIX,0x2,0x3,0x4,ORAZP,0x6,0x7,0x8,ORAIM,0xA,0xB,0xC,ORAAB,0xE,0xF, #0x0
-			BPLRL,ORAIY,0x2,0x3,0x4,ORAZX,0x6,0x7,CLCIP,ORAAY,0xA,0xB,0xC,ORAAX,0xE,0xF,
-			0x0,ANDIX,0x2,0x3,BITZP,ANDZP,0x6,0x7,0x8,ANDIM,0xA,0xB,BITAB,ANDAB,0xE,0xF, #0x2
-			BMIRL,ANDIY,0x2,0x3,0x4,ANDZX,0x6,0x7,SECIP,ANDAY,0xA,0xB,0xC,ANDAX,0xE,0xF,
-			0x0,EORIX,0x2,0x3,0x4,EORZP,0x6,0x7,0x8,EORIM,0xA,0xB,0xC,EORAB,0xE,0xF, #0x4
-			BVCRL,EORIY,0x2,0x3,0x4,EORZX,0x6,0x7,CLIIP,EORAY,0xA,0xB,0xC,EORAX,0xE,0xF,
-			0x0,ADCIX,0x2,0x3,0x4,ADCZP,0x6,0x7,0x8,ADCIM,0xA,0xB,0xC,ADCAB,0xE,0xF, #0x6
-			BVSRL,ADCIY,0x2,0x3,0x4,ADCZX,0x6,0x7,SEIIP,ADCAY,0xA,0xB,0xC,ADCAX,0xE,0xF,
+
+#-------------------
+#Arithmetic Shift Left
+#-------------------
+
+
+def ASLend():
+	if glob.np == 1: SEF("C"); glob.np == 0
+	else: CLF("C")
+
+	if glob.ALU >= 128: SEF("N")
+	else: CLF("N")
+
+def ASL():
+	if glob.ALU >127:
+		glob.np = 1
+	else:
+		glob.np = 0
+	glob.ALU = ByteCheck(glob.ALU << 1)
+	ASLend()
+
+
+def ASLAC(): #ASL on Accumulator, 2Cyc, $0A *CR*
+	if glob.Cyc == 1:
+		glob.ALU = glob.A
+		ASL()
+		glob.A = glob.ALU
+		if glob.A == 0: SEF("Z")
+		else: CLF("Z")
+
+def ASLZP(): #ASL on Zero Page Address, 5Cyc, $06 *CR*
+	if glob.Cyc == 4:
+		glob.ADL = glob.DB 				#grab zp address
+		glob.ADH = 0x00
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB 				#bring operand in for shifting
+	elif glob.Cyc == 2:
+		ASL()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+def ASLZX(): #ASL on Zero Page Address+X, 6Cyc, $16 *CR*
+	if glob.Cyc == 5:
+		glob.ADL = glob.DB
+		glob.ALU = glob.ADL
+		glob.ADH = 0x00
+	elif glob.Cyc == 4:
+		glob.ADL = Add(glob.X)
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 2:
+		ASL()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+def ASLAB(): #ASL on Absolute Address, 6Cyc, $0E *CR*
+	if glob.Cyc == 5:
+		glob.ADL = glob.DB
+	elif glob.Cyc == 4:
+		glob.ADH = glob.DB
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 2:
+		ASL()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+def ASLAX(): #ASL on Absolute Address+X, 7Cyc, $1E *CR*
+	if glob.Cyc == 6:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 5:
+		glob.ALU = Add(glob.X)
+		glob.ADL = glob.ALU
+	elif glob.Cyc == 4:
+		glob.ADH = glob.DB
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 2:
+		ASL()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+
+
+#-------------------
+#Logical Shift Right
+#-------------------
+
+
+def LSRend():
+	if glob.np == 1: SEF("C"); glob.np = 0
+	else: CLF("C")
+
+	if glob.ALU == 0: SEF("Z")
+	else: CLF("Z")
+
+	if glob.ALU >= 128: SEF("N")
+	else: CLF("N")
+
+def LSR():
+	if glob.ALU & 1 == 1:
+		glob.np = 1
+	else:
+		glob.np = 0
+
+	glob.ALU = glob.ALU>>1
+	LSRend()
+
+def LSRAC(): #LSR on Accumulator, 2Cyc, $4A *CR*
+	if glob.Cyc == 1:
+		glob.ALU = glob.A
+		LSR()
+		glob.A = glob.ALU
+
+def LSRZP(): #LSR on Zero Page, 5Cyc, $46 *CR*
+	if glob.Cyc == 4:
+		glob.ADL = glob.DB
+		glob.ADH = 0x00
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 2:
+		LSR()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+def LSRZX(): #LSR on Zero Page+X, 6Cyc, $56 *CR*
+	if glob.Cyc == 5:
+		glob.ALU = glob.DB
+		glob.ADH = 0x00
+	elif glob.Cyc == 4:
+		glob.ADL = Add(glob.X)
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 2:
+		LSR()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+def LSRAB(): #LSR on Absolute Address, 6Cyc, $4E *CR*
+	if glob.Cyc == 5:
+		glob.ADL = glob.DB
+	elif glob.Cyc == 4:
+		glob.ADH = glob.DB
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 2:
+		LSR()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+def LSRAX(): #LSR on Absolute Address+X, 7Cyc, $5E *CR*
+	if glob.Cyc == 6:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 5:
+		glob.ADL = Add(glob.X)
+	elif glob.Cyc == 4:
+		glob.ADH = glob.DB
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 2:
+		LSR()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+
+
+#-------------------
+#Rotate Left--------
+#-------------------
+
+
+def ROLend():
+	if glob.np == 1: SEF("C"); glob.np = 0
+	else: CLF("C")
+
+	if glob.ALU > 127: SEF("N")
+	else: CLF("N")
+
+def ROL():
+	if glob.ALU > 127: glob.np = 1
+	else: glob.np = 0
+
+	glob.ALU = ByteCheck(glob.ALU << 1)
+	glob.ALU = glob.ALU | (glob.P & 1)
+
+	ROLend()
+
+def ROLAC(): #Rotate Left on Accumulator, 2Cyc, $2A *CR*
+	if glob.Cyc == 1:
+		glob.ALU = glob.A
+		ROL()
+		glob.A = glob.ALU
+		if glob.A == 0: SEF("Z")
+		else: CLF("Z")
+
+def ROLZP(): #Rotate Left on Zero Page, 5Cyc, $26 *CR*
+	if glob.Cyc == 4:
+		glob.ADL = glob.DB
+		glob.ADH = 0x00
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 2:
+		ROL()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+def ROLZX(): #Rotate Left on Zero Page+X, 6Cyc, $36 *CR*
+	if glob.Cyc == 5:
+		glob.ALU = glob.DB
+		glob.ADH = 0x00
+	elif glob.Cyc == 4:
+		glob.ADL = Add(glob.X)
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 2:
+		ROL()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+def ROLAB(): #Rotate Left on Absolute Address, 6Cyc, $2E *CR*
+	if glob.Cyc == 5:
+		glob.ADL = glob.DB
+	elif glob.Cyc == 4:
+		glob.ADH = glob.DB
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 2:
+		ROL()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+def ROLAX(): #Rotate Left on Absolute Address+X, 7Cyc, $3E *CR*
+	if glob.Cyc == 6:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 5:
+		glob.ADL = Add(glob.X)
+	elif glob.Cyc == 4:
+		glob.ADH = glob.DB
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 2:
+		ROL()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+
+
+#-------------------
+#Rotate Right-------
+#-------------------
+
+
+def RORend():
+	if glob.np == 1: SEF("C"); glob.np = 0
+	else: CLF("C")
+
+	if glob.ALU > 127: SEF("N")
+	else: CLF("N")
+
+def ROR():
+	if glob.ALU & 1 == 1:
+		glob.np = 1
+	else:
+		glob.np = 0
+
+	glob.ALU = (glob.ALU >> 1)|((1&glob.np)<<7)
+
+def RORAC(): #Rotate Right on Accumulator, 2Cyc, $6A *CR*
+	if glob.Cyc == 1:
+		glob.ALU = glob.A
+		ROR()
+		glob.A = glob.ALU
+		if glob.A == 0: SEF("Z")
+		else: CLF("Z")
+
+def RORZP(): #Rotate Right on Zero Page, 5Cyc, $66 *CR*
+	if glob.Cyc == 4:
+		glob.ADL = glob.DB
+		glob.ADH = 0x00
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 2:
+		ROR()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+def RORZX(): #Rotate Right on Zero Page+X, 6Cyc, $76 *CR*
+	if glob.Cyc == 5:
+		glob.ALU = glob.DB
+		glob.ADH = 0x00
+	elif glob.Cyc == 4:
+		glob.ADL = Add(glob.X)
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 2:
+		ROR()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+def RORAB(): #Rotate Right on Absolute Address, 6Cyc, $6E *CR*
+	if glob.Cyc == 5:
+		glob.ADL = glob.DB
+	elif glob.Cyc == 4:
+		glob.ADH = glob.DB
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 2:
+		ROR()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+def RORAX(): #Rotate Right on Absolute Address+X, 7Cyc, $7E *CR*
+	if glob.Cyc == 6:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 5:
+		glob.ADL = Add(glob.X)
+	elif glob.Cyc == 4:
+		glob.ADH = glob.DB
+		AHL()
+	elif glob.Cyc == 3:
+		glob.ALU = glob.DB
+	elif glob.Cyc == 2:
+		ROR()
+	elif glob.Cyc == 1:
+		glob.Mem[glob.AB] = glob.ALU
+
+
+
+#-------------------
+#Stack Operations---
+#-------------------
+
+
+def TSXIP(): #Transfer Stack Pointer to X, 2Cyc, $BA *CR*
+	if glob.Cyc == 1:
+		glob.X = glob.S
+		if glob.X == 0: SEF("Z")
+		else: CLF("Z")
+
+		if glob.X >= 128: SEF("N")
+		else: CLF("N")
+
+def TXSIP(): #Transfer X to Stack Pointer, 2Cyc, $9A *CR*
+	if glob.Cyc == 1:
+		glob.S = glob.X
+
+def PHAIP(): #Push Accumulator, 3Cyc, $48 *CR*
+	if glob.Cyc == 2:
+		glob.Mem[glob.S+0x100] = glob.A
+	elif glob.Cyc == 1:
+		glob.S = ByteCheck(glob.S-1)
+
+def PLAIP(): #Pull to Accumulator, 4Cyc, $68 *CR*
+	if glob.Cyc == 3:
+		glob.S = ByteCheck(glob.S+1)
+	elif glob.Cyc == 2:
+		glob.ADL = glob.S
+	elif glob.Cyc == 1:
+		glob.A = glob.Mem[glob.ADL+0x100]
+
+		if glob.A == 0: SEF("Z")
+		else: CLF("Z")
+
+		if glob.A >= 128: SEF("N")
+		else: CLF("N")
+
+def PHPIP(): #Push Processor Status, 3Cyc, $08 *CR*
+	if glob.Cyc == 2:
+		glob.Mem[glob.S+0x100] = glob.P
+	elif glob.Cyc == 1:
+		glob.S = ByteCheck(glob.S-1)
+
+def PLPIP(): #Pull to Processor Status, 4Cyc, $28 *CR*
+	if glob.Cyc == 3:
+		glob.S = ByteCheck(glob.S+1)
+	elif glob.Cyc == 2:
+		glob.ADL = glob.S
+	elif glob.Cyc == 1:
+		glob.P = glob.Mem[glob.ADL+0x100]
+
+
+
+#-------------------
+#Jumps & Calls------
+#-------------------
+
+
+
+def JMPAB(): #Jump Absolute, 3Cyc, $4C *CR*
+	if glob.Cyc == 2:
+		glob.ADL = glob.DB
+	elif glob.Cyc == 1:
+		glob.ADH = glob.DB
+		AHL()
+		ABP()
+		DecPC()
+
+def JMPIN(): #Jump Indirect, 5Cyc, $6C *CR*
+	if glob.Cyc == 4:
+		glob.ADL = glob.DB
+	elif glob.Cyc == 3:
+		glob.ADH = glob.DB
+		AHL()
+	elif glob.Cyc == 2:
+		glob.ADL = glob.Mem[glob.AB]
+	elif glob.Cyc == 1:
+		glob.ADH = glob.Mem[glob.AB+1]
+		AHL()
+		ABP()
+		DecPC()
+
+def JSRAB(): #Jump to Subroutine, 6Cyc, $20 *CR*
+	if glob.Cyc == 5:
+		glob.ALU = glob.DB 								#save new ADL
+		glob.ADL = glob.S 								#putting stack to address bus
+	elif glob.Cyc == 4:
+		glob.Mem[glob.ADL+0x100] = ((glob.PC&0xff00)>>8) 			#pushes PCH to stack
+		glob.S = glob.ADL = ByteCheck(glob.S-1) 				 	#decrement stack pointer	
+	elif glob.Cyc == 3:
+		glob.Mem[glob.ADL+0x100] = ByteCheck((glob.PC&0xff)+1)		#pushes PCL to stack
+		glob.S = glob.ADL = ByteCheck(glob.S-1) 					#decrement stack pointer
+	elif glob.Cyc == 2:
+		glob.ADH = glob.DB 											#fetch new ADH
+	elif glob.Cyc == 1:
+		glob.ADL = glob.ALU 										#grab ADL
+		AHL()
+		ABP()
+
+def RTSIP(): #Return from Subroutine, 6Cyc, $60 **
+	if glob.Cyc == 5:
+		glob.S = glob.ADL = ByteCheck(glob.S+1)
+	elif glob.Cyc == 4:
+		glob.PC = glob.Mem[glob.ADL+0x100]
+		glob.S = glob.ADL = ByteCheck(glob.S+1)
+	elif glob.Cyc == 3:
+		glob.PC = (glob.PC+((glob.Mem[glob.ADL+0x100])<<8))
+	elif glob.Cyc == 2:
+		IncPC()
+	elif glob.Cyc == 1:
+		pass
+
+
+
+
+
+
+
+#-------------------
+#System Instructions
+#-------------------
+
+
+def NOPIP(): #No Operation, 2Cyc, $EA **
+	if glob.Cyc == 1:
+		pass
+
+def BRKIP(): #Break(Force Interrupt), 7Cyc, $00 *RC*
+	if glob.Cyc == 6:
+		glob.ADL = glob.S
+		glob.Mem[glob.ADL+0x100] = ((glob.PC&0xff00)>>8)
+		glob.S = glob.ADL = ByteCheck(glob.S-1)
+	elif glob.Cyc == 5:
+		glob.Mem[glob.ADL+0x100] = ByteCheck((glob.PC&0xff)-1)
+		glob.S = glob.ADL = ByteCheck(glob.S-1)
+	elif glob.Cyc == 4:
+		glob.Mem[glob.ADL+0x100] = ByteCheck(glob.P)
+		glob.S = glob.ADL = ByteCheck(glob.S-1)
+		glob.ADL = 0xFE
+	elif glob.Cyc == 3:
+		glob.ADH = 0xFF
+		AHL()
+	elif glob.Cyc == 2:
+		glob.PC = ByteCheck(glob.Mem[glob.AB])
+		glob.ADL = ByteCheck(glob.ADL+1)
+		AHL()
+	elif glob.Cyc == 1:
+		glob.PC = (glob.PC+((glob.Mem[glob.AB])<<8))
+		SEF("B")
+		SEF("I")
+
+def RTIIP(): #Return from Interrupt, 6Cyc, $40 *RC*
+	if glob.Cyc == 5:
+		glob.S = glob.ADL = ByteCheck(glob.S+1)
+	elif glob.Cyc == 4:
+		glob.P = glob.Mem[glob.ADL+0x100]
+		glob.S = glob.ADL = ByteCheck(glob.S+1)
+	elif glob.Cyc == 3:
+		glob.PC = glob.Mem[glob.ADL+0x100]
+		glob.S = glob.ADL = ByteCheck(glob.S+1)
+	elif glob.Cyc == 2:
+		glob.PC = (glob.PC+((glob.Mem[glob.ADL+0x100])<<8))
+	elif glob.Cyc == 1:
+		IncPC()
+
+def REDIP(): #read the status stuff, 2Cyc, $03 **
+	MemoryWatch = [0x2000, 0x2002]
+	if glob.Cyc == 1:
+		print('---: Processor Status:')
+		print('NV1BDIZC')
+		print(f"{glob.P:08b}")
+
+		print('---: Registers:')
+		print(" A| X| Y")
+		regs = ''
+		regs+=f"{glob.A:02x}".upper();regs+='|'
+		regs+=f"{glob.X:02x}".upper();regs+='|'
+		regs+=f"{glob.Y:02x}".upper()
+		print(regs)
+
+		print('---: ZP First 64:')
+		print(LHex(glob.Mem[:64]))
+		print('---: Memory Watch:')
+		for i in MemoryWatch:
+			print(f'{i:04x}'.upper(), ": ", f'{glob.Mem[i]:02x}'.upper())
+		print('---: Stack:')
+		print(LHex(glob.Mem[glob.S+0x100:0x200]))
+
+INSCOD = [BRKIP,ORAIX,0x2,REDIP,0x4,ORAZP,ASLZP,0x7,PHPIP,ORAIM,ASLAC,0xB,0xC,ORAAB,ASLAB,0xF, #0x0
+			BPLRL,ORAIY,0x2,0x3,0x4,ORAZX,ASLZX,0x7,CLCIP,ORAAY,0xA,0xB,0xC,ORAAX,ASLAX,0xF,
+			JSRAB,ANDIX,0x2,0x3,BITZP,ANDZP,ROLZP,0x7,PLPIP,ANDIM,ROLAC,0xB,BITAB,ANDAB,ROLAB,0xF, #0x2
+			BMIRL,ANDIY,0x2,0x3,0x4,ANDZX,ROLZX,0x7,SECIP,ANDAY,0xA,0xB,0xC,ANDAX,ROLAX,0xF,
+			RTIIP,EORIX,0x2,0x3,0x4,EORZP,LSRZP,0x7,PHAIP,EORIM,LSRAC,0xB,JMPAB,EORAB,LSRAB,0xF, #0x4
+			BVCRL,EORIY,0x2,0x3,0x4,EORZX,LSRZX,0x7,CLIIP,EORAY,0xA,0xB,0xC,EORAX,LSRAX,0xF,
+			RTSIP,ADCIX,0x2,0x3,0x4,ADCZP,RORZP,0x7,PLAIP,ADCIM,RORAC,0xB,JMPIN,ADCAB,RORAB,0xF, #0x6
+			BVSRL,ADCIY,0x2,0x3,0x4,ADCZX,RORZX,0x7,SEIIP,ADCAY,0xA,0xB,0xC,ADCAX,RORAX,0xF,
 			0x0,STAIX,0x2,0x3,STYZP,STAZP,STXZP,0x7,DEYIP,0x9,TXAIP,0xB,STYAB,STAAB,STXAB,0xF, #0x8
-			BCCRL,STAIY,0x2,0x3,STYZX,STAZX,STXZY,0x7,TYAIP,STAAY,0xA,0xB,0xC,STAAX,0xE,0xF,
+			BCCRL,STAIY,0x2,0x3,STYZX,STAZX,STXZY,0x7,TYAIP,STAAY,TXSIP,0xB,0xC,STAAX,0xE,0xF,
 			LDYIM,LDAIX,LDXIM,0x3,LDYZP,LDAZP,LDXZP,0x7,TAYIP,LDAIM,TAXIP,0xB,LDYAB,LDAAB,LDXAB,0xF, #0xA
-			BCSRL,LDAIY,0x2,0x3,LDYZX,LDAZX,LDXZY,0x7,CLVIP,LDAAY,0xA,0xB,LDYAX,LDAAX,LDXAY,0xF,
+			BCSRL,LDAIY,0x2,0x3,LDYZX,LDAZX,LDXZY,0x7,CLVIP,LDAAY,TSXIP,0xB,LDYAX,LDAAX,LDXAY,0xF,
 			CMYIM,CMPIX,0x2,0x3,CMYZP,CMPZP,DECZP,0x7,INYIP,CMPIM,DEXIP,0xB,CMYAB,CMPAB,DECAB,0xF, #0xC
 			BNERL,CMPIY,0x2,0x3,0x4,CMPZX,DECZX,0x7,CLDIP,CMPAY,0xA,0xB,0xC,CMPAX,DECAX,0xF,
 			CMXIM,SBCIX,0x2,0x3,CMXZP,SBCZP,INCZP,0x7,INXIP,SBCIM,NOPIP,0xB,CMXAB,SBCAB,INCAB,0xF, #0xE
 			BEQRL,SBCIY,0x2,0x3,0x4,SBCZX,INCZX,0x7,SEDIP,SBCAY,0xA,0xB,0xC,SBCAX,INCAX,0xF,]
 
-INSCYC = [0x0,6,0x2,0x3,0x4,3,0x6,0x7,0x8,2,0xA,0xB,0xC,4,0xE,0xF, #0x0
-			4,6,0x2,0x3,0x4,1,0x6,0x7,2,3,0xA,0xB,0xC,5,0xE,0xF,
-			0x0,6,0x2,0x3,3,3,0x6,0x7,0x8,2,0xA,0xB,4,4,0xE,0xF, #0x2
-			4,6,0x2,0x3,0x4,4,0x6,0x7,2,5,0xA,0xB,0xC,5,0xE,0xF,
-			0x0,6,0x2,0x3,0x4,3,0x6,0x7,0x8,2,0xA,0xB,0xC,4,0xE,0xF, #0x4
-			4,6,0x2,0x3,0x4,4,0x6,0x7,2,5,0xA,0xB,0xC,5,0xE,0xF,
-			0x0,6,0x2,0x3,0x4,3,0x6,0x7,0x8,2,0xA,0xB,0xC,4,0xE,0xF, #0x6
-			4,6,0x2,0x3,0x4,4,0x6,0x7,2,5,0xA,0xB,0xC,5,0xE,0xF,
+INSCYC = [7,6,0x2,2,0x4,3,5,0x7,3,2,2,0xB,0xC,4,6,0xF, #0x0
+			4,6,0x2,0x3,0x4,1,6,0x7,2,3,0xA,0xB,0xC,5,7,0xF,
+			6,6,0x2,0x3,3,3,5,0x7,4,2,2,0xB,4,4,6,0xF, #0x2
+			4,6,0x2,0x3,0x4,4,6,0x7,2,5,0xA,0xB,0xC,5,7,0xF,
+			6,6,0x2,0x3,0x4,3,5,0x7,3,2,2,0xB,3,4,6,0xF, #0x4
+			4,6,0x2,0x3,0x4,4,6,0x7,2,5,0xA,0xB,0xC,5,7,0xF,
+			6,6,0x2,0x3,0x4,3,5,0x7,4,2,2,0xB,5,4,6,0xF, #0x6
+			4,6,0x2,0x3,0x4,4,6,0x7,2,5,0xA,0xB,0xC,5,7,0xF,
 			0x0,6,0x2,0x3,3,3,3,0x7,2,0x9,2,0xB,4,4,4,0xF, #0x8
-			4,6,0x2,0x3,4,4,4,0x7,2,5,0xA,0xB,0xC,5,0xE,0xF,
+			4,6,0x2,0x3,4,4,4,0x7,2,5,2,0xB,0xC,5,0xE,0xF,
 			2,6,2,0x3,3,3,3,0x7,2,2,2,0xB,4,4,4,0xF, #0xA
-			4,6,0x2,0x3,4,4,4,0x7,2,5,0xA,0xB,5,5,5,0xF,
+			4,6,0x2,0x3,4,4,4,0x7,2,5,2,0xB,5,5,5,0xF,
 			2,6,0x2,0x3,3,3,5,0x7,2,2,2,0xB,4,4,6,0xF, #0xC
 			4,6,0x2,0x3,0x4,4,6,0x7,2,5,0xA,0xB,0xC,5,7,0xF,
 			2,6,0x2,0x3,3,3,5,0x7,2,2,2,0xB,4,4,6,0xF, #0xE
 			4,6,0x2,0x3,0x4,4,6,0x7,2,5,0xA,0xB,0xC,5,7,0xF,]
 
-INSSTR = [0x0,"ORAIX",0x2,0x3,0x4,"ORAZP",0x6,0x7,0x8,"ORAIM",0xA,0xB,0xC,"ORAAB",0xE,0xF, #0x0
-			"BPLRL","ORAIY",0x2,0x3,0x4,"ORAZX",0x6,0x7,"CLCIP","ORAAY",0xA,0xB,0xC,"ORAAX",0xE,0xF,
-			0x0,"ANDIX",0x2,0x3,"BITZP","ANDZP",0x6,0x7,0x8,"ANDIM",0xA,0xB,"BITAB","ANDAB",0xE,0xF, #0x2
-			"BMIRL","ANDIY",0x2,0x3,0x4,"ANDZX",0x6,0x7,"SECIP","ANDAY",0xA,0xB,0xC,"ANDAX",0xE,0xF,
-			0x0,"EORIX",0x2,0x3,0x4,"EORZP",0x6,0x7,0x8,"EORIM",0xA,0xB,0xC,"EORAB",0xE,0xF, #0x4
-			"BVCRL","EORIY",0x2,0x3,0x4,"EORZX",0x6,0x7,"CLIIP","EORAY",0xA,0xB,0xC,"EORAX",0xE,0xF,
-			0x0,"ADCIX",0x2,0x3,0x4,"ADCZP",0x6,0x7,0x8,"ADCIM",0xA,0xB,0xC,"ADCAB",0xE,0xF, #0x6
-			"BVSRL","ADCIY",0x2,0x3,0x4,"ADCZX",0x6,0x7,"SEIIP","ADCAY",0xA,0xB,0xC,"ADCAX",0xE,0xF,
+INSSTR = ["BRKIP","ORAIX",0x2,"REDIP",0x4,"ORAZP","ASLZP",0x7,"PHPIP","ORAIM","ASLAC",0xB,0xC,"ORAAB","ASLAB",0xF, #0x0
+			"BPLRL","ORAIY",0x2,0x3,0x4,"ORAZX","ASLZX",0x7,"CLCIP","ORAAY",0xA,0xB,0xC,"ORAAX","ASLAX",0xF,
+			"JSRAB","ANDIX",0x2,0x3,"BITZP","ANDZP","ROLZP",0x7,"PLPIP","ANDIM","ROLAC",0xB,"BITAB","ANDAB","ROLAB",0xF, #0x2
+			"BMIRL","ANDIY",0x2,0x3,0x4,"ANDZX","ROLZX",0x7,"SECIP","ANDAY",0xA,0xB,0xC,"ANDAX","ROLAX",0xF,
+			"RTIIP","EORIX",0x2,0x3,0x4,"EORZP","LSRZP",0x7,"PHAIP","EORIM","LSRAC",0xB,"JMPAB","EORAB","LSRAB",0xF, #0x4
+			"BVCRL","EORIY",0x2,0x3,0x4,"EORZX","LSRZX",0x7,"CLIIP","EORAY",0xA,0xB,0xC,"EORAX","LSRAX",0xF,
+			"RTSIP","ADCIX",0x2,0x3,0x4,"ADCZP","RORZP",0x7,"PLAIP","ADCIM","RORAC",0xB,"JMPIN","ADCAB","RORAB",0xF, #0x6
+			"BVSRL","ADCIY",0x2,0x3,0x4,"ADCZX","RORZX",0x7,"SEIIP","ADCAY",0xA,0xB,0xC,"ADCAX","RORAX",0xF,
 			0x0,"STAIX",0x2,0x3,"STYZP","STAZP","STXZP",0x7,"DEYIP",0x9,"TXAIP",0xB,"STYAB","STAAB","STXAB",0xF, #0x8
-			"BCCRL","STAIY",0x2,0x3,"STYZX","STAZX","STXZY",0x7,"TYAIP","STAAY",0xA,0xB,0xC,"STAAX",0xE,0xF,
+			"BCCRL","STAIY",0x2,0x3,"STYZX","STAZX","STXZY",0x7,"TYAIP","STAAY","TXSIP",0xB,0xC,"STAAX",0xE,0xF,
 			"LDYIM","LDAIX","LDXIM",0x3,"LDYZP","LDAZP","LDXZP",0x7,"TAYIP","LDAIM","TAXIP",0xB,"LDYAB","LDAAB","LDXAB",0xF, #0xA
-			"BCSRL","LDAIY",0x2,0x3,"LDYZX","LDAZX","LDXZY",0x7,"CLVIP","LDAAY",0xA,0xB,"LDYAX","LDAAX","LDXAY",0xF,
+			"BCSRL","LDAIY",0x2,0x3,"LDYZX","LDAZX","LDXZY",0x7,"CLVIP","LDAAY","TSXIP",0xB,"LDYAX","LDAAX","LDXAY",0xF,
 			"CMYIM","CMPIX",0x2,0x3,"CMYZP","CMPZP","DECZP",0x7,"INYIP","CMPIM","DEXIP",0xB,"CMYAB","CMPAB","DECAB",0xF, #0xC
 			"BNERL","CMPIY",0x2,0x3,0x4,"CMPZX","DECZX",0x7,"CLDIP","CMPAY",0xA,0xB,0xC,"CMPAX","DECAX",0xF,
 			"CMXIM","SBCIX",0x2,0x3,"CMXZP","SBCZP","INCZP",0x7,"INXIP","SBCIM","NOPIP",0xB,"CMXAB","SBCAB","INCAB",0xF, #0xE
 			"BEQRL","SBCIY",0x2,0x3,0x4,"SBCZX","INCZX",0x7,"SEDIP","SBCAY",0xA,0xB,0xC,"SBCAX","INCAX",0xF,]
+
+if __name__ == "__main__":
+	the = 0
+	for i in INSSTR:
+		if isinstance(i,str):
+			the += 1
+	print(the)

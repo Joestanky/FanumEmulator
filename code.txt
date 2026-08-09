@@ -1,6 +1,14 @@
+define PpuStatus_2002 $2002
 define PpuControl_2000 $2000
 .program
-lda #$04
-tay
-sta $1006
-cmy $1006
+sei
+cld
+lda #$10
+sta PpuControl_2000
+red
+ldx #$ff
+txs
+lda PpuStatus_2002
+bpl $800b
+lda PpuStatus_2002
+bpl $8010

@@ -29,17 +29,19 @@ def littleEndian(word):
 	leftByte = None
 	rightByte = None
 	if isinstance(word,str):
+		print("imma goofy goober rock")
 		word = word.replace("$", "")
 		word = word.replace("#", "")
 		leftByte = word[2:4]
 		rightByte = word[:2]
 	elif isinstance(word, int):
+		print("kcor reboog yfoog ammi")
 		leftByte = word>>8
-		rightByte = word &0xF
+		rightByte = word &0xFF
 	return [leftByte,rightByte]
 
 def valueLE(bytepair):
-	return toHex(bytepair[1])<<8+toHex(bytepair[0])
+	return (toHex(bytepair[1])<<8)+toHex(bytepair[0])
 
 def toSigned(byte):
 	if byte > 0xFF:
@@ -93,6 +95,7 @@ for line in lines:
 		else:
 			if len(sections) == 1: 	#Instruction with no opcode
 				addressingMode = 'IP'
+				fullOperand = ''
 			elif len(sections) == 2: 	#Instruction with opcode
 				fullOperand = sections[1]
 				hexes = fullOperand.replace('#','')
@@ -102,18 +105,24 @@ for line in lines:
 				hexes = hexes.replace(',','')
 
 				addressingMode = '~~'
-
+				print(sections[0].upper())
 				#Addressing Modes
-				if 		'd' == 'f':
-					pass
+				if 		fullOperand == 'A':
+					addressingMode = "AC"
+
+				elif sections[0].upper() in ('BNE', 'BEQ', 'BCC', 'BCS', 'BPL', 'BMI', 'BVC', 'BVS'):
+					addressingMode = 'RL'
+
 				elif 	"#" in fullOperand:
 					addressingMode = 'IM'
+
 				elif '(' in fullOperand:
 					if 		'X' in fullOperand: addressingMode = 'IX' 	#Indirect X
 					elif 	'Y' in fullOperand: addressingMode = 'IY' 	#Indirect Y
-
-				elif sections[0] in ('BNE', 'BEQ', 'BCC', 'BCS', 'BPL', 'BMI', 'BVC', 'BVS'):
-					addressingMode = 'RL'
+					else: 
+						addressingMode = 'IN'
+						sections[1] = sections[1].replace('(','')
+						sections[1] = sections[1].replace('(','')
 
 				elif 	len(hexes) >2:
 					#print(hexes, "look here josef blizzard")
@@ -137,29 +146,41 @@ for line in lines:
 			operandBytes = []
 			if len(sections) > 1:
 				if sections[1] in Markers.keys():
-					if opcode in ['BNE', 'BEQ', 'BCC', 'BCS', 'BPL', 'BMI', 'BVC', 'BVS']:
+					print("you sexy lovah")
+					if opcode.upper() in ['BNE', 'BEQ', 'BCC', 'BCS', 'BPL', 'BMI', 'BVC', 'BVS']:
 						one = len(ByteDump)+2
 						two = Markers[sections[1]]
 						hre = two - one
 						if hre < 0:
 							hre = 0x100 - hre
 						hre = toSigned(hre)
-						print(hex(hre),one, two, hre, "josef kemal blizzard lookey heres")
+						print(hex(hre),one, two, hre, "joASFDddAl blifdgshard lookey heres")
 						operandBytes.append(hre)
 					else:
 						first = Markers[sections[1]]&0xFF
 						second = Markers[sections[1]]>>8
 						operandBytes.append(first)
 						operandBytes.append(second)
-				elif addressingMode in ['AB','AX','AY']: 
+				elif addressingMode in ['AB','AX','AY', 'IN']: 
 					first = sections[1][3:5]
 					second = sections[1][1:3]
 					operandBytes.append(toHex(first))
 					operandBytes.append(toHex(second))
-				elif addressingMode in ['ZP','ZX','ZY','IM','RL']:
+				elif addressingMode in ['ZP','ZX','ZY','IM']:
 					operandBytes.append(toHex(sections[1][-2:]))
 				elif addressingMode in ['IX','IY']:
 					operandBytes.append(toHex(sections[1][2:4]))
+				elif addressingMode == 'RL':
+					one = len(ByteDump)+2
+					two = valueLE(littleEndian(sections[1]))-32768
+					print(sections[1], littleEndian(sections[1]), two, "hi")
+					hre = two - one
+					if hre < 0:
+						hre = 0x100-hre
+					hre = toSigned(hre)
+					print(hex(hre),hex(one), hex(two), hre, "-=-=-")
+					operandBytes.append(hre)
+
 			opBytes = ''	
 			for i in operandBytes:
 				opBytes += hex(i) +' '
@@ -208,8 +229,14 @@ print("Byte Dump ---")
 print(ByteDumpHex)
 print("---")
 
+RawDump[0x0050] = 0x40
+RawDump[0x4000] = 0xE8
+RawDump[0x4001] = 0x60
 RawDump[0x400C] = 0x00
 RawDump[0x400D] = 0x80
+RawDump[0x400E] = 0x40
+RawDump[0x400F] = 0x80
+
 
 if outputcode: 
 	#print(RawDump)

@@ -1,10 +1,11 @@
+
 def init():
-	global A,X,Y,PC,IR,AB,ADL,ADH,DB,ALU,P,Cyc, X
+	global A,X,Y,PC,IR,AB,ADL,ADH,DB,ALU,P,Cyc,S
 	A = 0x00	#this is the accumulator you like add and subtract and shit to it and save it to places
 	X = 0x00	#this is the index register so yes
 	Y = 0x00 	#this is the second index register inde"x" then y get it?
 	PC = 0x8000 #this is the program counter it is where we are
-	IR = 0x02 	#this be the instruction reister okay
+	IR = 0x02 	#this be the instruction register okay
 	AB = 0x0000 #Address bus
 	ADL = 0x00  #Low-order byte used to set address bus
 	ADH = 0x00	#High-order byte used to set address bus
@@ -12,10 +13,21 @@ def init():
 	ALU = 0x00  #idek but i think it is neededdd
 	P = 0x20 	#Processor status flag byte {NV1BDIZC}
 	Cyc = 0 	#the current amount of cycles left for an instruction (set every fetch)
-	S = 0x00 	#Value of stack pointer 
+	S = 0xFF 	#Value of stack pointer 
 	global flags, Mem, np, vv
 	#Processor Status
 	flags = 'CZIDB1VN'
 	Mem = []
 	np = 0
 	vv = 0
+
+	global PPUCTRL, PPUMASK, PPUSTATUS, OAMADDR, OAMDATA, PPUSCROLL, PPUADDR, PPUDATA, OAMDMA
+	PPUCTRL 	= 0x00
+	PPUMASK 	= 0x00
+	PPUSTATUS 	= 0x00
+	OAMADDR 	= 0x00
+	OAMDATA 	= 0x00
+	PPUSCROLL 	= 0x00
+	PPUADDR 	= 0x00
+	PPUDATA 	= 0x00
+	OAMDMA 		= 0x00

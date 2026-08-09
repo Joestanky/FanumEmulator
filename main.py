@@ -1,8 +1,12 @@
 RUNCPU = True
+DEBUG = True
 
 import glob
+from ppu import Dot
 from inst import *
 from sys import exit
+
+import time
 
 glob.init()
 
@@ -74,7 +78,9 @@ def LoadROM():
 	print("TV System: ", TV)
 
 
-	input("File format data complete. Press enter to load ROM.")
+	hi = input("File format data complete. Press enter to load ROM.")
+	if hi.upper() == 'N':
+		exit()
 
 	Data = []
 
@@ -97,12 +103,11 @@ def LoadROM():
 	else:
 		for i in range(16*1024):
 			glob.Mem[0x8000+i] = Program[i]
+			glob.Mem[0xC000+i] = Program[i]
 	#print(hex(glob.Mem[0x8000]))
 
 
 
-
-#registers and busses and things
 
 
 
@@ -149,12 +154,6 @@ def AddSign(b):
 
 def SubSign(b):
 	return ByteCheck(b-glob.ALU)
-#100000000
-# 11111011
-#000000101
-# 00000000
-#         
-
 
 def Sub(b):
 	return ByteCheck(glob.ALU-b)
@@ -184,7 +183,8 @@ def HLA(): #Address Bus to ADH and ADL
 
 #Printing/Debugging
 
-MemoryWatch = [0x2000]
+MemoryWatch = []
+watcher = 0
 
 def LHex(array):
 	newy = "|"
@@ -218,14 +218,16 @@ def FullCheck():
 	print('---: Memory Watch:')
 	for i in MemoryWatch:
 		print(f'{i:04x}'.upper(), ": ", f'{glob.Mem[i]:02x}'.upper())
+	print('---: Stack:')
+	print(LHex(glob.Mem[glob.S+0x100:0x200]))
 
 #Cyclic Behaivors
 def Addressing():
-	if glob.Cyc == 1 and ADR != 'IP':
+	if glob.Cyc == 1 and ADR != 'IP' and ADR != 'AC':
 		IncPC()
 		PAB()
 
-	if INSSTR[IR][:3] in ["INC", "DEC"]: 
+	if INSSTR[IR][:3] in ["INC", "DEC", "ASL", "LSR", "ROL", "ROR"]: 
 		if (ADR == 'AB') and (glob.Cyc == 5):
 			IncPC()
 			PAB()
@@ -234,21 +236,62 @@ def Addressing():
 			PAB()
 		return
 
-	if (ADR == 'AB') and (glob.Cyc == 3): IncPC(); PAB()
+	if INSSTR[IR][:3] in ["JMP"]:
+		if (ADR == 'AB') and glob.Cyc == 2:
+			IncPC()
+			PAB()
+		if (ADR == 'IN') and glob.Cyc == 4:
+			IncPC()
+			PAB()
+		return
+
+	if INSSTR[IR][:3] in ["JSR"]:
+		if glob.Cyc == 2:
+			IncPC()
+			PAB()
+			return
+	if (ADR in ['AB']) and (glob.Cyc == 3): IncPC(); PAB()
 	if (ADR == 'AX' or ADR == 'AY') and (glob.Cyc == 4): IncPC(); PAB()
 
+#PPU setting
+
+def CPU2PPU():
+	glob.PPUCTRL 	= glob.Mem[0x2000]
+	glob.PPUMASK 	= glob.Mem[0x2001]
+	glob.PPUSTATUS 	= glob.Mem[0x2002]
+	glob.OAMADDR 	= glob.Mem[0x2003]
+	glob.OAMDATA 	= glob.Mem[0x2004]
+	glob.PPUSCROLL 	= glob.Mem[0x2005]
+	glob.PPUADDR 	= glob.Mem[0x2006]
+	glob.PPUDATA 	= glob.Mem[0x2007]
+	glob.OAMDMA 	= glob.Mem[0x4014]
+
+def PPU2CPU():
+	glob.Mem[0x2000] = glob.PPUCTRL
+	glob.Mem[0x2001] = glob.PPUMASK
+	glob.Mem[0x2002] = glob.PPUSTATUS
+	glob.Mem[0x2003] = glob.OAMADDR
+	glob.Mem[0x2004] = glob.OAMDATA
+	glob.Mem[0x2005] = glob.PPUSCROLL
+	glob.Mem[0x2006] = glob.PPUADDR
+	glob.Mem[0x2007] = glob.PPUDATA
+	glob.Mem[0x4014] = glob.OAMDMA
 
 
+
+framecyc = 0
+tick = 0
+frameNum = 0
 
 def Cycle():
 	global FE, IR, ITR, CycleNum, FLW, ADR
-	print("----------------")
-	print("Cycle: ", CycleNum)
+	if DEBUG: print("----------------")
+	if DEBUG: print("Cycle: ", CycleNum)
 
 	if FE == 0:				#If fetching
 		FE = 1 				#Now Executing
 		glob.DB = glob.Mem[PAB()]		#Push opcode to Data Bus
-		print("_Fetched: ", hex(glob.DB))
+		if DEBUG: print("_Fetched: ", hex(glob.DB))
 		HLA()
 		IncPC()				#Increment PC (apparently done right after retrieving byte)
 		CycleNum += 1
@@ -257,16 +300,17 @@ def Cycle():
 		if ITR == 0: 		#If still needing to InTeRpret the code:
 			ITR = 1 		#Now really executing
 			IR = glob.DB 		#Set Instruction register
+			if DEBUG: print(IR)
 			ADR = INSSTR[IR][-2:]
-			print("IR set: ", INSSTR[IR], hex(IR), ADR)
+			if DEBUG: print("IR set: ", INSSTR[IR], hex(IR), ADR)
 			glob.Cyc = INSCYC[IR]#Set cycles
 			glob.Cyc -= 1 		#interpretation takes 1 cycle
 			glob.DB = glob.Mem[PAB()]
 			CycleNum += 1
 
 		else:				#If interpreted and now executing
-			print("Ins  |  AB  |Byte| Cyc")	#printing for debugging
-			print(INSSTR[IR], '0x'+f"{glob.AB:04x}".upper(),hex(glob.Mem[glob.AB])," ",glob.Cyc)	#yes
+			if DEBUG: print("Ins  |  AB  |Byte| Cyc")	#printing for debugging
+			if DEBUG: print(INSSTR[IR], '0x'+f"{glob.AB:04x}".upper(),hex(glob.Mem[glob.AB])," ",glob.Cyc)	#yes
 
 			INSCOD[IR]()	#Run instruction
 
@@ -279,34 +323,55 @@ def Cycle():
 			if glob.Cyc == 1:		#If instruction done with memory
 				ITR = 0
 				glob.DB = glob.Mem[PAB()] #Set data bus to next opcode
-				print("Fetched: ", '0x'+f'{glob.DB:02x}'.upper())
-				print(hex(glob.PC), "PC")			
+
+				if DEBUG: print("Fetched: ", '0x'+f'{glob.DB:02x}'.upper())
+				if DEBUG: print(hex(glob.PC), "PC")			
+
 				HLA()
-				if glob.DB == 0x02 or CycleNum >= 64:
+
+				if glob.DB == 0x02 or CycleNum >= 256: #if done running
+					endTime = time.time()
 					FullCheck()
+					print("Run Time: ", f"{(endTime-startTime):.9f}", "Cycles: ", CycleNum)
+					print(framecyc)
 					exit()
-				if FLW: 		#If we are flowing normally
-					if (ADR == 'IM'):
-						IncPC()
-					else:
-						IncPC() 	#Set PC for next operand grab
-				else: 			#If i.e. our ins uses no operands
-					FLW = True
-					DecPC() 	#Go back one byte
-					glob.DB = glob.Mem[PAB()] #Set that as next opcode
-					IncPC() 	#Set PC back for next operand
+
+				IncPC()
 				ADR = ''
 
 
 			glob.Cyc -=1
 			CycleNum += 1
-			print("Cycle ended")
-			print("----------------")
+			if DEBUG: print("Cycle ended")
+			if DEBUG: print("----------------")
 
 
 
 if __name__ == "__main__":
 	print("------------==--------------")
 	LoadROM()
+	startTime = time.time()
 	while RUNCPU:
-		Cycle()
+		tick = time.time()
+		framecyc = 0
+		while (time.time()-tick) < (1/60):
+			if framecyc < 29830:
+
+				Cycle()
+				CPU2PPU()
+				Dot()
+				Dot()
+				Dot()
+				PPU2CPU()
+				print(glob.PPUSTATUS)
+				framecyc += 1
+			else:
+				print(time.time()-tick)
+		#MemoryWatch.append(watcher)
+		#watcher += 1
+
+"""
+tick = time.time()
+while (time.time()-tick) < sleepers:
+	pass
+"""
